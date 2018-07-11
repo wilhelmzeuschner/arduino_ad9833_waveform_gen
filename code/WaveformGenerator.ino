@@ -74,7 +74,7 @@ bool wave_type_changed = 1;
 Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
 
 void setup() {
-	pinMode(4, OUTPUT);
+	pinMode(TFT_CS, OUTPUT);                    //Pin (4) is TFT_CS and has to be set as an output, otherwise the pin won't toggle!
 	pinMode(freqUpPin, INPUT_PULLUP);      // Set pins for rotary encoders as INPUTS and enable
 	pinMode(freqDownPin, INPUT_PULLUP);    // internal pullup resistors.
 	pinMode(stepUpPin, INPUT_PULLUP);
@@ -142,7 +142,6 @@ void setup() {
 
 	Serial.begin(115200);
 	Serial.println(F("Wilhelm Zeuschner, 10.07.2018, Version 1.1"));
-	Serial.println(F("Bald beginnt das Studium in Emden!"));
 	Serial.println(F("http://www.vwlowen.co.uk/arduino/AD9833-waveform-generator/AD9833-waveform-generator.htm"));
 }
 
