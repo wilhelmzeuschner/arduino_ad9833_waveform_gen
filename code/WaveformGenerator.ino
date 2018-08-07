@@ -1,20 +1,36 @@
 /*
+
+Original Code and Instructions: http://www.vwlowen.co.uk/arduino/AD9833-waveform-generator/AD9833-waveform-generator.htm
 AD9833 Waveform Module vwlowen.co.uk
+
+----------------
+modified by Wilhelm Zeuschner
+10.07.2018, Version 1.1 - modified UI
+07.08.2018, Version 1.2 - added RTC support
+
 */
-#include <Adafruit_GFX.h>      // Core graphics library
-#include <Adafruit_ST7735.h>            // Hardware-specific library
+
+//IF YOU WANT TO USE A DS3231 RTC COMMENT OUT THE LINE BELOW
+#define USE_RTC
+//Even with the RTC enabled, the sketch will still upload to a Pro Mini / Nano with an Atmega 168
+//RTC Libary used:
+//https://github.com/adafruit/RTClib
+
+#include <Adafruit_GFX.h>			// Core graphics library
+#include <Adafruit_ST7735.h>		// Hardware-specific library
 
 #include <SPI.h>
-#include <Rotary.h>            // Rotary encoder: https://github.com/brianlow/Rotary 
+#include <Rotary.h>					// Rotary encoder: https://github.com/brianlow/Rotary 
 
-
+#ifdef USE_RTC
+#include <RTClib.h>
+#endif
 
 #define TFT_CS     4
-#define TFT_RST    9  // you can also connect this to the Arduino reset
-// in which case, set this #define pin to -1!
+#define TFT_RST    9				//You can also connect this to the Arduino reset in which case, set this #define pin to -1!
 #define TFT_DC     8 
 
-
+//The UI can be configured to use a variety of different colors
 //https://stackoverflow.com/questions/13720937/c-defined-16bit-high-color
 #define Black           0x0000      /*   0,   0,   0 */
 #define Orange          0xFD20      /* 255, 165,   0 */
@@ -69,19 +85,31 @@ unsigned long freqOld = freq;
 unsigned long incr = 1;
 unsigned long oldIncr = 1;
 
+#ifdef USE_RTC
+byte timing = 61;
+#endif
+
+
 bool wave_type_changed = 1;
 
 Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+#ifdef USE_RTC
+RTC_DS3231 rtc;
+#endif
 
 void setup() {
-	pinMode(TFT_CS, OUTPUT);                    //Pin (4) is TFT_CS and has to be set as an output, otherwise the pin won't toggle!
+	pinMode(4, OUTPUT);
 	pinMode(freqUpPin, INPUT_PULLUP);      // Set pins for rotary encoders as INPUTS and enable
 	pinMode(freqDownPin, INPUT_PULLUP);    // internal pullup resistors.
 	pinMode(stepUpPin, INPUT_PULLUP);
 	pinMode(stepDownPin, INPUT_PULLUP);
 	pinMode(wavePin, INPUT_PULLUP);
 
-
+	//RTC
+	#ifdef USE_RTC
+	rtc.begin();
+	#endif
+	
 
 	// Can't set SPI MODE here because the display and the AD9833 use different MODES.
 	SPI.begin();
@@ -140,9 +168,12 @@ void setup() {
 	tft.setCursor(25, 50);
 	format(freq);
 
+	/*
 	Serial.begin(115200);
 	Serial.println(F("Wilhelm Zeuschner, 10.07.2018, Version 1.1"));
+	Serial.println(F("Bald beginnt das Studium in Emden!"));
 	Serial.println(F("http://www.vwlowen.co.uk/arduino/AD9833-waveform-generator/AD9833-waveform-generator.htm"));
+	*/
 }
 
 void updateDisplay() {
@@ -153,16 +184,28 @@ void updateDisplay() {
 
 	//Conditions remove unnecessary flicker	
 	if (wave_type_changed) {
-		tft.fillRect(30, 5, tft.width() - 40, 25, Black);            // Clear text.	  
+
 		tft.setTextColor(Yellow);
 		tft.setTextSize(2);
-		switch (waveType) {
-		case SINE: tft.setCursor(56, 10); tft.println("SINE"); break;
-		case SQUARE: tft.setCursor(45, 10); tft.println("SQUARE"); break;
-		case TRIANGLE: tft.setCursor(32, 10); tft.println("TRIANGLE"); break;
-		}
 
-		wave_type_changed = 0;
+		#ifdef USE_RTC
+		tft.fillRect(2, 5, 95, 25, Black);            // Clear text.
+		switch (waveType) {
+			case SINE: tft.setCursor(26, 10); tft.println("SINE"); break;
+			case SQUARE: tft.setCursor(15, 10); tft.println("SQUARE"); break;
+			case TRIANGLE: tft.setCursor(3, 10); tft.println("TRIANGLE"); break;
+		}
+		#else
+		tft.fillRect(32, 5, 95, 25, BLACK);            // Clear text.
+		switch (waveType) {
+			case SINE: tft.setCursor(56, 10); tft.println("SINE"); break;
+			case SQUARE: tft.setCursor(45, 10); tft.println("SQUARE"); break;
+			case TRIANGLE: tft.setCursor(33, 10); tft.println("TRIANGLE"); break;
+		}
+		#endif
+		
+		
+		wave_type_changed = 0;		
 	}
 	else {
 		tft.fillRect(25, 50, 110, 14, Black);           // Clear frequency numerals.
@@ -228,7 +271,40 @@ void loop() {
 		AD9833setFrequency(freq, waveType);     // must have been turned so update AD9833 and display.
 		updateDisplay();
 		freqOld = freq;                         // Remember new frequency to avoid unwanted display 
-	}                                         // and AD9833 updates.
+	}                                       // and AD9833 updates.
+
+	//RTC
+	#ifdef USE_RTC
+	DateTime now = rtc.now();
+	if (timing != now.minute()) {
+		tft.fillRect(100, 7, 57, 24, Black);
+		timing = now.minute();
+		tft.setCursor(120, 8);
+		tft.setTextColor(White);
+		tft.setTextSize(1);
+		tft.print(now.hour());
+		tft.print(":");
+		if (timing < 10) {
+			tft.print("0");
+		}
+		tft.print(now.minute());
+
+		//Date
+		tft.setCursor(99, 20);
+		if (now.day() < 10) {
+			tft.print("0");
+		}
+		tft.print(now.day());
+		tft.print(".");
+		if (now.month() < 10) {
+			tft.print("0");
+		}
+		tft.print(now.month());
+		tft.print(".");
+		tft.print(now.year());
+	}
+	#endif
+	
 }
 
 // AD9833 documentation advises a 'Reset' on first applying power.
