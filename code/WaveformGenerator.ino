@@ -168,12 +168,7 @@ void setup() {
 	tft.setCursor(25, 50);
 	format(freq);
 
-	/*
-	Serial.begin(115200);
-	Serial.println(F("Wilhelm Zeuschner, 10.07.2018, Version 1.1"));
-	Serial.println(F("Bald beginnt das Studium in Emden!"));
-	Serial.println(F("http://www.vwlowen.co.uk/arduino/AD9833-waveform-generator/AD9833-waveform-generator.htm"));
-	*/
+	
 }
 
 void updateDisplay() {
