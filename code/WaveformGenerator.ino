@@ -98,9 +98,9 @@ RTC_DS3231 rtc;
 #endif
 
 void setup() {
-	pinMode(4, OUTPUT);
-	pinMode(freqUpPin, INPUT_PULLUP);      // Set pins for rotary encoders as INPUTS and enable
-	pinMode(freqDownPin, INPUT_PULLUP);    // internal pullup resistors.
+	pinMode(TFT_CS, OUTPUT);				//Pin (4) is TFT_CS and has to be set as an output, otherwise the pin won't toggle!
+	pinMode(freqUpPin, INPUT_PULLUP);		//Set pins for rotary encoders as INPUTS and enable
+	pinMode(freqDownPin, INPUT_PULLUP);		//Internal pullup resistors.
 	pinMode(stepUpPin, INPUT_PULLUP);
 	pinMode(stepDownPin, INPUT_PULLUP);
 	pinMode(wavePin, INPUT_PULLUP);
