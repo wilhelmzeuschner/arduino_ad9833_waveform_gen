@@ -3,4 +3,4 @@ Modified version of "AD9833 Waveform Generator" from http://www.vwlowen.co.uk/ar
 
 I made some adjustments to make the GUI look and feel better.
 Support for a DS3231 RTC was added too.
-Additionally a 3D-Model of a 3D-printable Case designed by me and some images are available on Thingiverse.
+Additionally a 3D-Model of a 3D-printable Case designed by me and some images are available on Thingiverse (https://www.thingiverse.com/thing:2999358).
